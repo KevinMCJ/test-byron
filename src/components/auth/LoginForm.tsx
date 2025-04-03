@@ -1,24 +1,16 @@
 import React, { useState } from 'react';
+import { LoginFormData, LoginFormErrors } from '../../types';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../hooks/useAuth';
 import Button from '../common/Button';
-
-interface LoginForm {
-  username: string;
-  password: string;
-}
-
-type FormErrors = Partial<LoginForm> & {
-  general?: string;
-};
 
 const initialValues = {
   username: '',
   password: '',
 };
 
-const validate = (data: LoginForm): FormErrors => {
-  const errors: FormErrors = {};
+const validate = (data: LoginFormData): LoginFormErrors => {
+  const errors: LoginFormErrors = {};
 
   if (!data.username.trim()) {
     errors.username = 'El usuario es requerido';
@@ -32,8 +24,8 @@ const validate = (data: LoginForm): FormErrors => {
 };
 
 const LoginForm: React.FC = () => {
-  const [formData, setFormData] = useState<LoginForm>(initialValues);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [formData, setFormData] = useState<LoginFormData>(initialValues);
+  const [errors, setErrors] = useState<LoginFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const { login } = useAuth();
