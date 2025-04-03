@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, ReactNode } from "react";
-import { User } from "../types";
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { User } from '../types';
 
 interface AuthContextType {
   user: User;
@@ -10,7 +10,7 @@ interface AuthContextType {
 }
 
 const defaultValue: AuthContextType = {
-  user: { username: "", isAuthenticated: false },
+  user: { username: '', isAuthenticated: false },
   isAuthenticated: false,
   isLoading: true,
   login: () => false,
@@ -23,24 +23,36 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const isValidUser = (data: unknown): data is User => {
+  if (!data || typeof data !== 'object') return false;
+  const user = data as User;
+  return (
+    typeof user.username === 'string' &&
+    typeof user.isAuthenticated === 'boolean'
+  );
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User>({
-    username: "",
+    username: '',
     isAuthenticated: false,
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem('user');
 
     if (storedUser) {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser({ ...parsedUser, isAuthenticated: false });
+        const parsedUser: User = JSON.parse(storedUser);
+        if (!isValidUser(parsedUser)) {
+          throw new Error('Failed to authenticate user');
+        }
+        setUser({ ...parsedUser, isAuthenticated: true });
       } catch (error) {
-        console.log(error);
-        localStorage.removeItem("user");
+        console.error(error);
+        localStorage.removeItem('user');
       }
     }
 
@@ -48,11 +60,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = (username: string, password: string): boolean => {
-    if (username === "admin" && password === "1234") {
+    if (username === 'admin' && password === '1234') {
       const authenticatedUser = { username, isAuthenticated: true };
       setUser(authenticatedUser);
 
-      localStorage.setItem("user", JSON.stringify(authenticatedUser));
+      localStorage.setItem('user', JSON.stringify(authenticatedUser));
       return true;
     }
 
@@ -60,8 +72,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = (): void => {
-    setUser({ username: "", isAuthenticated: false });
-    localStorage.removeItem("user");
+    setUser({ username: '', isAuthenticated: false });
+    localStorage.removeItem('user');
   };
 
   const value = {
