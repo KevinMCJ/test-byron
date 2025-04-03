@@ -1,5 +1,5 @@
-import React from "react";
-import { Task } from "../../types";
+import React from 'react';
+import { Task } from '../../types';
 
 interface TaskItemProps {
   task: Task;
@@ -7,8 +7,10 @@ interface TaskItemProps {
   onRemoveTask?: (id: number) => Promise<boolean>;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, onRemoveTask }) => {
-  const handleToggle = async () => {};
+const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleCompleted, onRemoveTask }) => {
+  const handleToggle = async () => {
+    await onToggleCompleted(task.id)
+  };
 
   const handleRemove = async () => {
     if (onRemoveTask) {
@@ -25,7 +27,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onRemoveTask }) => {
         className="task-checkbox"
       />
 
-      <span className={`task-title ${task.completed ? "completed" : ""}`}>
+      <span className={`task-title ${task.completed ? 'completed' : ''}`}>
         {task.title}
       </span>
 
