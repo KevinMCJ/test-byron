@@ -1,36 +1,82 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router";
-import { useAuth } from "../../hooks/useAuth";
-import Button from "../common/Button";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../../hooks/useAuth';
+import Button from '../common/Button';
+
+interface LoginForm {
+  username: string;
+  password: string;
+}
+
+type FormErrors = Partial<LoginForm> & {
+  general?: string;
+};
+
+const initialValues = {
+  username: '',
+  password: '',
+};
+
+const validate = (data: LoginForm): FormErrors => {
+  const errors: FormErrors = {};
+
+  if (!data.username.trim()) {
+    errors.username = 'El usuario es requerido';
+  }
+
+  if (!data.password.trim()) {
+    errors.password = 'La contraseña es requerida';
+  }
+
+  return errors;
+};
 
 const LoginForm: React.FC = () => {
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
+  const [formData, setFormData] = useState<LoginForm>(initialValues);
+  const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    const newData = {
+      ...formData,
+      [name]: value,
+    };
+
+    setFormData(newData);
+    setErrors(validate(newData));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const submitErrors = validate(formData);
+    if (Object.keys(submitErrors).length > 0) {
+      setErrors(submitErrors);
+      return;
+    }
+
     setIsSubmitting(true);
-    setError("");
 
     try {
-      const success = login(username, password);
+      const success = login(formData.username, formData.password);
 
       if (success) {
-        navigate("/tasks");
+        navigate('/tasks');
       } else {
-        setError(
-          'Credenciales incorrectas. Prueba con usuario: "admin" y contraseña: "1234"'
-        );
+        setErrors({
+          general:
+            'Credenciales incorrectas. Prueba con usuario: "admin" y contraseña: "1234"',
+        });
       }
     } catch (err) {
-      console.log(err);
-      setError("Ha ocurrido un error al iniciar sesión");
+      setErrors({
+        general: 'Oops... algo salió mal. Por favor, inténtelo más tarde',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -41,19 +87,25 @@ const LoginForm: React.FC = () => {
       <h2 className="login-title">Iniciar Sesión</h2>
 
       <form onSubmit={handleSubmit} className="login-form">
-        {error && <div className="error-message">{error}</div>}
+        {errors.general && (
+          <div className="error-message">{errors.general}</div>
+        )}
 
         <div className="form-group">
           <label htmlFor="username">Usuario</label>
           <input
             id="username"
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
             placeholder="Ingrese su usuario"
             disabled={isSubmitting}
             autoComplete="username"
           />
+          {errors.username && (
+            <div className="error-message">{errors.username}</div>
+          )}
         </div>
 
         <div className="form-group">
@@ -61,12 +113,16 @@ const LoginForm: React.FC = () => {
           <input
             id="password"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
             placeholder="Ingrese su contraseña"
             disabled={isSubmitting}
             autoComplete="current-password"
           />
+          {errors.password && (
+            <div className="error-message">{errors.password}</div>
+          )}
         </div>
 
         <Button
@@ -74,7 +130,7 @@ const LoginForm: React.FC = () => {
           variant="primary"
           className="login-button"
           isLoading={isSubmitting}
-          disabled={isSubmitting}
+          disabled={isSubmitting || Object.keys(errors).length > 0}
         >
           Ingresar
         </Button>
